@@ -198,7 +198,9 @@ function MainApp({ user, onLogout }) {
     if (inputRef.current) inputRef.current.style.height = "auto";
     try {
       setLoadPhase("generating");
-      const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+       const controller = new AbortController();
+const timeout = setTimeout(() => controller.abort(), 120000);
+const r = await fetch("/api/chat", { method: "POST", signal: controller.signal, headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 16000, system: SYS, messages: nx.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.content })) }) });
       const data = await r.json();
       const full = data.content?.map(b => b.text || "").join("") || "Something went wrong.";
