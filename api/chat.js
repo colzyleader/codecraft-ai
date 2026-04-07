@@ -1,27 +1,32 @@
 export const config = {
   runtime: 'edge',
-  regions: ['iad1'],
 };
 
 export default async function handler(req) {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type' } });
-  }
-
   if (req.method !== 'POST') {
-    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!API_KEY) {
-    return Response.json({ error: 'API key not set' }, { status: 500 });
+    return new Response(JSON.stringify({ error: 'API key not set' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
     const body = await req.text();
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': API_KEY,
@@ -30,16 +35,5 @@ export default async function handler(req) {
       body: body,
     });
 
-    const text = await res.text();
-
-    return new Response(text, {
-      status: res.status,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch (e) {
-    return Response.json({ error: e.message || 'Unknown error' }, { status: 500 });
-  }
-}
+    clearTimeout(timeout);
+    co
