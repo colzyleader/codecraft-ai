@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    { "source": "/api/chat", "destination": "/api/chat" },
+    { "source": "/api/checkout", "destination": "/api/checkout" },
+    { "source": "/api/credits", "destination": "/api/credits" },
+    { "source": "/api/stripe-success", "destination": "/api/stripe-success" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" }
+      ]
+    }
+  ]
+}
